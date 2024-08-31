@@ -1,24 +1,29 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect } from 'react';
+import { getMessaging, onMessage } from 'firebase/messaging';
+import { initializeApp } from 'firebase/app';
+import { firebaseConfig } from './firebaseConfig';
+import { sendNativeNotification } from './notificationHelpers';
+import useVisibilityChange from './useVisibilityChange';
+import MainPage from "./MainPage";
+const app = initializeApp(firebaseConfig);
+const messaging = getMessaging(app);
 
 function App() {
+  const isForeground = useVisibilityChange();
+
+  useEffect(() => {
+    onMessage(messaging, (payload) => {
+      console.log('Message received. ', payload);
+      const { title, body } = payload.notification;
+
+      sendNativeNotification({ title, body });
+    });
+  }, [isForeground]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <MainPage />
+  </div>
   );
 }
 

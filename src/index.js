@@ -2,16 +2,35 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import { register as registerServiceWorker } from './serviceWorker';
+import { getToken } from './firebase';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const rootElement = document.getElementById('root');
+const root = ReactDOM.createRoot(rootElement);
+
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+const initializeApp = async () => {
+  if ('serviceWorker' in navigator) {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    if (registrations.length === 0) {
+      await Promise.all(registrations.map(reg => reg.unregister()));
+      await registerServiceWorker();
+    } else {
+      console.log('Service worker already registered:', registrations);
+      // Uncomment the following line to unregister existing service workers before registering a new one
+      // await Promise.all(registrations.map(reg => reg.unregister()));
+    }
+  }
+  try {
+    await getToken(); // Get the FCM token
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+  }
+};
+
+initializeApp().catch(console.error);
