@@ -26,7 +26,7 @@ const ImageCard = ({ image1 }) => {
   return (
     <div className="image-card">
       <div className="image-container">
-        <img src={image1} alt="Image 1" className="card-image" />
+        <img src={image1} alt="/" className="card-image" />
       </div>
       <button
         className="instagram-button"
