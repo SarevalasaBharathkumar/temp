@@ -1,33 +1,48 @@
-import React from "react";
+import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";
-import './ImageCard.css'; // Make sure to create and include this CSS file
+import './ImageCard.css';
 
 const ImageCard = ({ image1 }) => {
-  const handleInstagramShare = (imageUrl) => {
-    // Create an anchor element and simulate a download
-    const downloadLink = document.createElement("a");
-    downloadLink.href = imageUrl;
-    downloadLink.download = "image.jpg"; // You can set a custom filename here
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-    // Detect the user's device
-    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  const downloadImage = (imageUrl) => {
+    return new Promise((resolve) => {
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.download = "image.jpg"; // You can change the file name if you want
+      link.onload = () => resolve();
+      link.click();
+      resolve();
+    });
+  };
 
-    // Redirect to Instagram Story camera
-    setTimeout(() => {
+  const handleInstagramShare = async (imageUrl) => {
+    setIsDownloading(true);
+    try {
+      await downloadImage(imageUrl);
+      setIsDownloading(false);
+
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+      // iOS devices
       if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
-        const instagramUrl = `instagram://camera`;
+        const instagramUrl = `instagram://story-camera`;
         window.location.href = instagramUrl;
-      } else if (/android/i.test(userAgent)) {
-        const instagramUrl = `intent://camera#Intent;package=com.instagram.android;scheme=instagram;end`;
+      }
+      // Android devices
+      else if (/android/i.test(userAgent)) {
+        const instagramUrl = `intent://story-camera#Intent;package=com.instagram.android;scheme=instagram;end`;
         window.location.href = instagramUrl;
-      } else {
+      } 
+      // Fallback for non-mobile devices
+      else {
         alert("This feature is only available on mobile devices with Instagram installed.");
       }
-    }, 1000); // Wait for the download to complete before redirecting
+    } catch (error) {
+      console.error("Error downloading the image:", error);
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -38,8 +53,13 @@ const ImageCard = ({ image1 }) => {
       <button
         className="instagram-button"
         onClick={() => handleInstagramShare(image1)}
+        disabled={isDownloading}
       >
-        <FontAwesomeIcon icon={faInstagram} size="2x" />
+        {isDownloading ? (
+          <div className="loading-spinner"></div> // Add a loading spinner during download
+        ) : (
+          <FontAwesomeIcon icon={faInstagram} size="2x" />
+        )}
       </button>
     </div>
   );
